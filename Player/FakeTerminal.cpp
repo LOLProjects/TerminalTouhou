@@ -81,7 +81,9 @@ void FakeTerminal::prepareVertices()
 
     for (unsigned int x = 0; x < size.x; x++)
     for (unsigned int y = 0; y < size.y; y++)
-        setChar(sf::Vector2u(x, y), def);
+    {
+        setChar(sf::Vector2u(x, y), test_string[x + y * size.x]);
+    }
 }
 
 std::array<sf::Vector2f, 4> FakeTerminal::getCharQuad(uint8_t character)
@@ -98,5 +100,5 @@ std::array<sf::Vector2f, 4> FakeTerminal::getCharQuad(uint8_t character)
 
 void FakeTerminal::update(float delta)
 {
-    setChar(sf::Vector2u(std::rand() % size.x, std::rand() % size.y), std::rand() % 256);
+    //setChar(sf::Vector2u(std::rand() % size.x, std::rand() % size.y), std::rand() % 256);
 }

@@ -5,7 +5,11 @@
 
 class FakeTerminal
 {
+
     public:
+        static const uint8_t test_string[];
+
+
         FakeTerminal(sf::Vector2u terminal_size);
         virtual ~FakeTerminal();
 
