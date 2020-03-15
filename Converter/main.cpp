@@ -70,9 +70,7 @@ int main(int argc, char** argv)
         std::cout << "Verbose mode is enabled." << std::endl;
 
     sf::Texture test_texture;
-
-    std::cout << path.relative_path().string() << std::endl;
-
+    
     if (!test_texture.loadFromFile(path.relative_path().string()))
     {
         std::cerr << "Couldn't open file" << std::endl;
