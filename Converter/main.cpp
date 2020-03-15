@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <cstring>
+#include <filesystem>
 
 int giveHelp()
 {
@@ -33,22 +34,27 @@ int noArguments()
     return 1;
 }
 
+int fileNotFound(std::string path)
+{
+    std::cerr << "Invalid path given : \"" << path << "\".\n"
+        << "Use -h or --help to get usage." << std::endl;
+    return 1;
+}
+
 int main(int argc, char** argv)
 {
-    std::string path;
+    std::filesystem::path path;
     bool single_image = false;
     bool verbose = false;
 
     if (argc <= 1) return noArguments();
 
-    //You can now definitely assume that argc > 1
     //The first argument has to be the path
     //No need to check if path is a flag, since it won't be a file or a dir.
     path = argv[1];
     if (path == "-h" || path == "--help") return giveHelp();
 
-    //TODO: Check if path is either a file or dir, if not then cerr
-    //It's important to do this before any other error to show that the first parameter must be the path
+    if (!std::filesystem::exists(path)) return fileNotFound(path.relative_path().string());
 
     while (argc-- != 2)
     {
