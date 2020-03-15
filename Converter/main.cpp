@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstring>
 
-void giveHelp()
+int giveHelp()
 {
     std::cout <<
     "=== Manual for TT Converter ===\n"
@@ -16,103 +16,48 @@ void giveHelp()
     "  -s or --single     : Process one single image instead of a folder of images (path has to contain filename).\n"
 
     << std::endl;
+    return 0;
+}
+
+int invalidFlag(std::string arg)
+{
+    std::cerr << "Invalid flag given : \"" << arg << "\".\n"
+        << "Use -h or --help to get usage." << std::endl;
+    return 1;
+}
+
+int noArguments()
+{
+    std::cerr << "No arguments given. You need to specify a path!\n"
+        << "Use -h or --help to get usage." << std::endl;
+    return 1;
 }
 
 int main(int argc, char** argv)
 {
     std::string path;
     bool single_image = false;
-
     bool verbose = false;
 
-    //Arguments parsing
-    //It's ugly but it works.
+    if (argc <= 1) return noArguments();
 
-    if (argc <= 1)
+    //You can now definitely assume that argc > 1
+    //The first argument has to be the path
+    //No need to check if path is a flag, since it won't be a file or a dir.
+    path = argv[1];
+    if (path == "-h" || path == "--help") return giveHelp();
+
+    //TODO: Check if path is either a file or dir, if not then cerr
+    //It's important to do this before any other error to show that the first parameter must be the path
+
+    while (argc-- != 2)
     {
-        std::cerr << "No arguments given. You need to specify a path!\n"
-            << "Use -h or --help to get usage." << std::endl;
-        return 1;
-    }
+        std::string arg = argv[argc];
 
-    std::string last_flag = "";
-    for (int i = 1; i < argc; i++)
-    {
-        std::string arg = argv[i];
-
-        if (!arg.length())
-            continue;
-
-        //std::clog << "Parsing argument #" << i << " : \"" << arg << '\"' << std::endl;
-
-        if (arg.at(0) == '-')
-        {
-            if (arg.length() == 1)
-            {
-                std::cerr << "Invalid flag given : \"-\".\n"
-                    << "Use -h or --help to get usage." << std::endl;
-                return 1;
-            }
-
-            if (arg.length() != 2 && arg.at(1) != '-')
-            {
-                std::cerr << "Invalid flag given : \"" << arg << "\".\n"
-                    << "Use -h or --help to get usage." << std::endl;
-                return 1;
-            }
-
-            switch (arg.at(1))
-            {
-            case '-':
-                if (arg.length() == 2)
-                {
-                    std::cerr << "Invalid flag given : \"" << arg << "\".\n"
-                        << "Use -h or --help to get usage." << std::endl;
-                    return 1;
-                }
-
-                if (arg == "--help")
-                {
-                    giveHelp();
-                    return 0;
-                }
-
-                if (arg == "--verbose")
-                    verbose = true;
-
-                if (arg == "--single")
-                    single_image = true;
-
-                break;
-
-            case 'h':
-                giveHelp(); return 0;
-
-            case 'v':
-                verbose = true; break;
-
-            case 's':
-                single_image = true; break;
-
-            default:
-                std::cerr << "Unknown flag given : \"" << arg << "\".\n"
-                    << "Use -h or --help to get usage." << std::endl;
-                return 1;
-            }
-        }
-        else
-        {
-            if (last_flag == "")
-            {
-                if (path.length())
-                {
-                    std::cerr << "Two paths were given in the argument list!\n"
-                        << "Use -h or --help to get usage." << std::endl;
-                    return 1;
-                }
-                path = arg;
-            }
-        }
+        if (arg == "-h" || arg == "--help") return giveHelp();
+        else if (arg == "-v" || arg == "--verbose") verbose = true;
+        else if (arg == "-s" || arg == "--single") single_image = true;
+        else return invalidFlag(arg);
     }
 
     if (verbose)
