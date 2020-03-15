@@ -69,15 +69,15 @@ int main(int argc, char** argv)
     if (verbose)
         std::cout << "Verbose mode is enabled." << std::endl;
 
-    return 0; //TEMPORARY
-
-    /*
-
-    std::string test_image_path = "";
     sf::Texture test_texture;
 
-    if (!test_texture.loadFromFile(test_image_path))
+    std::cout << path.relative_path().string() << std::endl;
+
+    if (!test_texture.loadFromFile(path.relative_path().string()))
+    {
+        std::cerr << "Couldn't open file" << std::endl;
         return 1;
+    }
 
     sf::RenderTexture render_texture;
     render_texture.create(80 * 8, 24 * 16);
@@ -139,7 +139,6 @@ int main(int argc, char** argv)
     }
 
     std::cout << std::endl;
-    */
 
     return 0;
 }
