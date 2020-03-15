@@ -2,10 +2,127 @@
 
 #include <string>
 #include <iostream>
+#include <cstring>
 
-int main()
+void giveHelp()
 {
-    std::string test_image_path = "maxresdefault.jpg";
+    std::cout <<
+    "=== Manual for TT Converter ===\n"
+    "Usage : converter (file path) [flags]\n\n"
+
+    "List of flags : \n"
+    "  -h or --help       : Show this page :)\n"
+    "  -v or --verbose    : Enable verbose mode, gives more information during the processing.\n"
+    "  -s or --single     : Process one single image instead of a folder of images (path has to contain filename).\n"
+
+    << std::endl;
+}
+
+int main(int argc, char** argv)
+{
+    std::string path;
+    bool single_image = false;
+
+    bool verbose = false;
+
+    //Arguments parsing
+    //It's ugly but it works.
+
+    if (argc <= 1)
+    {
+        std::cerr << "No arguments given. You need to specify a path!\n"
+            << "Use -h or --help to get usage." << std::endl;
+        return 1;
+    }
+
+    std::string last_flag = "";
+    for (int i = 1; i < argc; i++)
+    {
+        std::string arg = argv[i];
+
+        if (!arg.length())
+            continue;
+
+        //std::clog << "Parsing argument #" << i << " : \"" << arg << '\"' << std::endl;
+
+        if (arg.at(0) == '-')
+        {
+            if (arg.length() == 1)
+            {
+                std::cerr << "Invalid flag given : \"-\".\n"
+                    << "Use -h or --help to get usage." << std::endl;
+                return 1;
+            }
+
+            if (arg.length() != 2 && arg.at(1) != '-')
+            {
+                std::cerr << "Invalid flag given : \"" << arg << "\".\n"
+                    << "Use -h or --help to get usage." << std::endl;
+                return 1;
+            }
+
+            switch (arg.at(1))
+            {
+            case '-':
+                if (arg.length() == 2)
+                {
+                    std::cerr << "Invalid flag given : \"" << arg << "\".\n"
+                        << "Use -h or --help to get usage." << std::endl;
+                    return 1;
+                }
+
+                if (arg == "--help")
+                {
+                    giveHelp();
+                    return 0;
+                }
+
+                if (arg == "--verbose")
+                    verbose = true;
+
+                if (arg == "--single")
+                    single_image = true;
+
+                break;
+
+            case 'h':
+                giveHelp(); return 0;
+
+            case 'v':
+                verbose = true; break;
+
+            case 's':
+                single_image = true; break;
+
+            default:
+                std::cerr << "Unknown flag given : \"" << arg << "\".\n"
+                    << "Use -h or --help to get usage." << std::endl;
+                return 1;
+            }
+        }
+        else
+        {
+            if (last_flag == "")
+            {
+                if (path.length())
+                {
+                    std::cerr << "Two paths were given in the argument list!\n"
+                        << "Use -h or --help to get usage." << std::endl;
+                    return 1;
+                }
+                path = arg;
+            }
+        }
+    }
+
+    if (verbose)
+        std::cout << "Verbose mode is enabled." << std::endl;
+
+    return 0; //TEMPORARY
+
+    /*
+
+    std::string test_image_path = "";
     sf::Texture test_texture;
 
     if (!test_texture.loadFromFile(test_image_path))
@@ -43,7 +160,7 @@ int main()
         uint8_t choosed_char = 0;
         unsigned int choosed_char_score = 0;
 
-        for (int c = 0; c < 256; c++)
+        for (int c = 3; c < 127; c++)
         {
             unsigned int this_score = 0;
 
@@ -71,6 +188,7 @@ int main()
     }
 
     std::cout << std::endl;
+    */
 
     return 0;
 }
