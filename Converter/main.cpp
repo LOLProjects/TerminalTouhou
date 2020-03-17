@@ -237,6 +237,9 @@ size_t convertImage(const sf::Image& image, uint8_t* destination)
             {
                 choosed_char_score = this_score;
                 choosed_char = c;
+
+                if (this_score == 8 * 16) //Max score
+                    break;
             }
         }
 
