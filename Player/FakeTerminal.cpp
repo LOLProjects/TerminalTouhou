@@ -9,6 +9,7 @@ FakeTerminal::FakeTerminal(sf::Vector2u terminal_size, FakeTerminal::frame_callb
       next_frame_callback(callback)
 {
     //ctor
+    window.setFramerateLimit(24);
 }
 
 FakeTerminal::~FakeTerminal()
