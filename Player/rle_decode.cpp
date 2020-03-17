@@ -3,6 +3,9 @@
 #include <cstring>
 #include <cstdio>
 
+#define WIDTH 80
+#define HEIGHT 24
+
 const uint8_t* read_input_file(const char* filename, int* size)
 {
     *size = 0;
@@ -41,7 +44,7 @@ int rle_decode_frame(const uint8_t** input, const uint8_t* end_of_input, uint8_t
 {
     int total_bytes = 0;
 
-    while (*input < end_of_input && total_bytes < 1920)
+    while (*input < end_of_input && total_bytes < WIDTH*HEIGHT)
     {
         int count     = 1 + (*input)[0];
         uint8_t byte  = (*input)[1];
@@ -52,12 +55,12 @@ int rle_decode_frame(const uint8_t** input, const uint8_t* end_of_input, uint8_t
         *input += 2;
     }
 
-    if (total_bytes > 1920)
+    if (total_bytes > WIDTH*HEIGHT)
     {
         // frame overflow
         return 1;
     }
-    else if (total_bytes < 1920)
+    else if (total_bytes < WIDTH*HEIGHT)
     {
         // early file end
         return 2;
@@ -77,16 +80,36 @@ int rle_decode_file(const char* filename, uint8_t* frame_data)
     while (data < eof)
     {
         int status = rle_decode_frame(&data, eof, frame_data);
-        if (status != 0)
+        if (status != 0 && false)
         {
             fprintf(stderr, "error at frame %d : '%s'\n", decoded_frames, (status == 1 ? "frame data overflow" : status == 2 ? "early frame data end" : "unknown"));
             abort(); // abort
             return 0;
         }
 
-        frame_data += 1920;
+        frame_data += WIDTH*HEIGHT;
         ++decoded_frames;
     }
 
     return decoded_frames;
+}
+
+int main()
+{
+    uint8_t* frame_data = (uint8_t*)malloc(WIDTH*HEIGHT * 30);
+    int frames = rle_decode_file("result.bin", frame_data);
+
+    printf("decoded frames : %d\n", frames);
+
+    for (int i = 0; i < HEIGHT; ++i)
+    {
+        for (int j = 0; j < WIDTH; ++j)
+        {
+
+            printf("%02X", frame_data[i*WIDTH + j]);
+        }
+        printf("****\n");
+    }
+
+    return 0;
 }
