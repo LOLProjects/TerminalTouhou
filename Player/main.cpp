@@ -1,4 +1,5 @@
 #include <SFML/Audio/Music.hpp>
+#include <SFML/Main.hpp>
 
 #include "FakeTerminal.h"
 

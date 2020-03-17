@@ -9,8 +9,6 @@ class FakeTerminal
     public:
         using frame_callback_t = bool(*)(uint8_t*);
 
-        static const uint8_t test_string[];
-
         FakeTerminal(sf::Vector2u terminal_size, frame_callback_t callback);
 
         virtual ~FakeTerminal();
@@ -32,9 +30,7 @@ class FakeTerminal
 
         sf::Texture chars;
 
-        void prepareVertices();
-
-        void load_next_frame();
+        bool load_next_frame();
 
         std::array<sf::Vector2f, 4> getCharQuad(uint8_t character);
 

@@ -23,8 +23,6 @@ bool FakeTerminal::init()
     if (!chars.loadFromFile("chars.png"))
         return false;
 
-    prepareVertices();
-
     load_next_frame();
 
     return true;
@@ -40,16 +38,16 @@ void FakeTerminal::run()
 
     int frames = 0;
 
-    while (window.isOpen())
+    bool isRunning = true;
+
+    while (window.isOpen() && isRunning)
     {
         {   //Event handling
             sf::Event e;
 
             while (window.pollEvent(e))
-            {
                 if (e.type == sf::Event::Closed)
                     window.close();
-            }
         }
 
         delta = clk.restart();
@@ -58,7 +56,7 @@ void FakeTerminal::run()
         ++frames;
         if (time_acc >= frame_time)
         {
-            load_next_frame();
+            isRunning = load_next_frame();
             time_acc = sf::Time::Zero;
             frames = 0;
         }
@@ -70,6 +68,20 @@ void FakeTerminal::run()
         window.draw(vertices, &chars);
 
         window.display();
+    }
+
+    // Do nothing on the last frame, let the user take in the view.
+    while (window.isOpen())
+    {   //Event handling
+        sf::Event e;
+
+        while (window.pollEvent(e))
+        {
+            if (e.type == sf::Event::Closed)
+                window.close();
+            if (e.type == sf::Event::KeyPressed)
+                isRunning = false;
+        }
     }
 }
 
@@ -92,18 +104,7 @@ void FakeTerminal::setChar(sf::Vector2u pos, uint8_t character)
 }
 
 
-void FakeTerminal::prepareVertices()
-{
-    uint8_t def = 8;
-
-    for (unsigned int x = 0; x < size.x; x++)
-    for (unsigned int y = 0; y < size.y; y++)
-    {
-        setChar(sf::Vector2u(x, y), test_string[x + y * size.x]);
-    }
-}
-
-void FakeTerminal::load_next_frame()
+bool FakeTerminal::load_next_frame()
 {
     if (next_frame_callback)
     {
@@ -118,7 +119,9 @@ void FakeTerminal::load_next_frame()
                     setChar(sf::Vector2u(j, i), frame_data[i][j]);
                 }
             }
+        return status;
     }
+    return false;
 }
 
 std::array<sf::Vector2f, 4> FakeTerminal::getCharQuad(uint8_t character)
