@@ -3,8 +3,7 @@
 #include <cstring>
 #include <cstdio>
 
-#define WIDTH 80
-#define HEIGHT 24
+#include "rle_decode.h"
 
 const uint8_t* read_input_file(const char* filename, int* size)
 {
@@ -46,8 +45,8 @@ int rle_decode_frame(const uint8_t** input, const uint8_t* end_of_input, uint8_t
 
     while (*input < end_of_input && total_bytes < WIDTH*HEIGHT)
     {
-        int count     = 1 + (*input)[0];
-        uint8_t byte  = (*input)[1];
+        uint8_t byte  = (*input)[0];
+        int count     = 1 + (*input)[1];
         memset(output, byte, count);
         output += count;
         total_bytes += count;
@@ -80,7 +79,7 @@ int rle_decode_file(const char* filename, uint8_t* frame_data)
     while (data < eof)
     {
         int status = rle_decode_frame(&data, eof, frame_data);
-        if (status != 0 && false)
+        if (status != 0)
         {
             fprintf(stderr, "error at frame %d : '%s'\n", decoded_frames, (status == 1 ? "frame data overflow" : status == 2 ? "early frame data end" : "unknown"));
             abort(); // abort
@@ -94,6 +93,7 @@ int rle_decode_file(const char* filename, uint8_t* frame_data)
     return decoded_frames;
 }
 
+/*
 int main()
 {
     uint8_t* frame_data = (uint8_t*)malloc(WIDTH*HEIGHT * 30);
@@ -113,3 +113,4 @@ int main()
 
     return 0;
 }
+*/
