@@ -2,10 +2,11 @@
 
 #include <cstdlib>
 
-FakeTerminal::FakeTerminal(sf::Vector2u terminal_size) :
+FakeTerminal::FakeTerminal(sf::Vector2u terminal_size, FakeTerminal::frame_callback_t callback) :
     size(terminal_size),
     window(sf::VideoMode(terminal_size.x * 8 * 2, terminal_size.y * 16 * 2), "TerminalTouhou", sf::Style::Close),
-    vertices(sf::Quads, terminal_size.x * terminal_size.y * 4)
+    vertices(sf::Quads, terminal_size.x * terminal_size.y * 4),
+      next_frame_callback(callback)
 {
     //ctor
 }
@@ -17,20 +18,27 @@ FakeTerminal::~FakeTerminal()
 
 bool FakeTerminal::init()
 {
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(0);
 
     if (!chars.loadFromFile("chars.png"))
         return false;
 
     prepareVertices();
 
+    load_next_frame();
+
     return true;
 }
 
 void FakeTerminal::run()
 {
+    const sf::Time frame_time = sf::microseconds(1000000/24);
+    sf::Time time_acc;
+
     sf::Clock clk;
-    float delta;
+    sf::Time delta;
+
+    int frames = 0;
 
     while (window.isOpen())
     {
@@ -44,11 +52,20 @@ void FakeTerminal::run()
             }
         }
 
-        delta = clk.restart().asSeconds();
+        delta = clk.restart();
 
-        update(delta);
+        time_acc += delta;
+        ++frames;
+        if (time_acc >= frame_time)
+        {
+            load_next_frame();
+            time_acc = sf::Time::Zero;
+            frames = 0;
+        }
 
-        window.clear();
+        update(delta.asSeconds());
+
+        //window.clear();
 
         window.draw(vertices, &chars);
 
@@ -84,6 +101,24 @@ void FakeTerminal::prepareVertices()
         setChar(sf::Vector2u(x, y), def);
 }
 
+void FakeTerminal::load_next_frame()
+{
+    if (next_frame_callback)
+    {
+        uint8_t frame_data[24][80];
+        bool status = next_frame_callback((uint8_t*)frame_data);
+
+        if (status)
+            for (int i = 0; i < 24; ++i)
+            {
+                for (int j = 0; j < 80; ++j)
+                {
+                    setChar(sf::Vector2u(j, i), frame_data[i][j]);
+                }
+            }
+    }
+}
+
 std::array<sf::Vector2f, 4> FakeTerminal::getCharQuad(uint8_t character)
 {
     sf::Vector2f a = sf::Vector2f(9.f * (character % 32) + 8.f, 16.f * (character / 32) + 8.f);
@@ -98,5 +133,5 @@ std::array<sf::Vector2f, 4> FakeTerminal::getCharQuad(uint8_t character)
 
 void FakeTerminal::update(float delta)
 {
-    setChar(sf::Vector2u(std::rand() % size.x, std::rand() % size.y), std::rand() % 256);
+    //setChar(sf::Vector2u(std::rand() % size.x, std::rand() % size.y), std::rand() % 256);
 }
