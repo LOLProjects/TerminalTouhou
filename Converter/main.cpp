@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <array>
 
 int giveHelp()
 {
@@ -49,6 +50,7 @@ int fileNotFound(std::string& path)
 
 int main(int argc, char** argv)
 {
+    //Program argument variables
     std::string path;
     bool single_image = false;
     bool verbose = false;
@@ -75,14 +77,22 @@ int main(int argc, char** argv)
     if (verbose)
         std::cout << "Verbose mode is enabled." << std::endl;
 
+    if (!single_image)
+    {
+        std::cerr << "Only single image mode is supported right now. Use -s to enable it." << std::endl;
+        return 1;
+    }
+
+    //Load the image
     sf::Texture test_texture;
-    
+
     if (!test_texture.loadFromFile(path))
     {
         std::cerr << "Couldn't open file" << std::endl;
         return 1;
     }
 
+    //Redimention it
     sf::RenderTexture render_texture;
     render_texture.create(80 * 8, 24 * 16);
 
@@ -102,19 +112,25 @@ int main(int argc, char** argv)
 
     sf::Image test_image = result.copyToImage();
 
-    test_image.saveToFile("test.png");
+    //test_image.saveToFile("test.png");
 
+    //Load the charset
     sf::Image chars;
     chars.loadFromFile("chars.png");
 
-    std::cout << "{ ";
+    //The data array : 2 * 1920 bytes is the biggest it could ever be
+    std::array<uint8_t, 2 * 24 * 80> frame_data;
+    size_t pointer = 0;
 
+    //Compression is done on the spot
+    //For each char of the terminal
     for (int y = 0; y < 24; y++)
     for (int x = 0; x < 80; x++)
     {
         uint8_t choosed_char = 0;
         unsigned int choosed_char_score = 0;
 
+        //For each char in the charset
         for (int c = 3; c < 127; c++)
         {
             unsigned int this_score = 0;
@@ -122,9 +138,11 @@ int main(int argc, char** argv)
             int ccx = 9 * (c % 32) + 8;
             int ccy = 16 * (c / 32) + 8;
 
+            //For each pixel of the char in the charset
             for (int cx = 0; cx < 8; cx++)
             for (int cy = 0; cy < 16; cy++)
             {
+                //Make a score of how much that char fits the original image pixels
                 bool image_pixel = test_image.getPixel(x * 8 + cx, y * 16 + cy).r > 127;
                 bool char_pixel = chars.getPixel(ccx + cx, ccy + cy).r > 127;
 
@@ -138,11 +156,20 @@ int main(int argc, char** argv)
             }
         }
 
-        std::cout << (int)choosed_char;
-        std::cout << ", ";
+        if (pointer == 0 || frame_data.at(pointer - 1) == 255 || frame_data.at(pointer - 2) != choosed_char) //Need to create a new RLE block
+        {
+            frame_data.at(pointer) = choosed_char;
+            frame_data.at(pointer + 1) = 0;
+            pointer += 2;
+        }
+        else
+            frame_data.at(pointer - 1)++;
     }
 
-    std::cout << std::endl;
+    {
+        std::ofstream file("result.bin", std::ios::binary);
+        file.write((const char*)frame_data.begin(), pointer);
+    }
 
     return 0;
 }

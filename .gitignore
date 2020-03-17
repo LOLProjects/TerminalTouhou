@@ -15,8 +15,5 @@ bld/
 *.layout
 *.cscope_file_list
 
-# Dynamix link libraries
+# Dynamic link libraries
 *.dll
-
-# VS Code files
-.vscode/
