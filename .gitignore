@@ -17,3 +17,6 @@ bld/
 
 # Dynamix link libraries
 *.dll
+
+# VS Code files
+.vscode/

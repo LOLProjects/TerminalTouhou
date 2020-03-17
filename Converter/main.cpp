@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 #include <cstring>
-#include <filesystem>
+#include <fstream>
 
 int giveHelp()
 {
@@ -20,7 +20,7 @@ int giveHelp()
     return 0;
 }
 
-int invalidFlag(std::string arg)
+int invalidFlag(std::string& arg)
 {
     std::cerr << "Invalid flag given : \"" << arg << "\".\n"
         << "Use -h or --help to get usage." << std::endl;
@@ -34,7 +34,13 @@ int noArguments()
     return 1;
 }
 
-int fileNotFound(std::string path)
+bool exists(std::string& path)
+{
+    std::ifstream f(path);
+    return f.good();
+}
+
+int fileNotFound(std::string& path)
 {
     std::cerr << "Invalid path given : \"" << path << "\".\n"
         << "Use -h or --help to get usage." << std::endl;
@@ -43,7 +49,7 @@ int fileNotFound(std::string path)
 
 int main(int argc, char** argv)
 {
-    std::filesystem::path path;
+    std::string path;
     bool single_image = false;
     bool verbose = false;
 
@@ -54,7 +60,7 @@ int main(int argc, char** argv)
     path = argv[1];
     if (path == "-h" || path == "--help") return giveHelp();
 
-    if (!std::filesystem::exists(path)) return fileNotFound(path.relative_path().string());
+    if (!exists(path)) return fileNotFound(path);
 
     while (argc-- != 2)
     {
@@ -71,7 +77,7 @@ int main(int argc, char** argv)
 
     sf::Texture test_texture;
     
-    if (!test_texture.loadFromFile(path.relative_path().string()))
+    if (!test_texture.loadFromFile(path))
     {
         std::cerr << "Couldn't open file" << std::endl;
         return 1;
