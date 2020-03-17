@@ -215,7 +215,7 @@ size_t convertImage(const sf::Image& image, uint8_t* destination)
         unsigned int choosed_char_score = 0;
 
         //For each char in the charset
-        for (int c = 3; c < 127; c++)
+        for (int c = 0; c < 256; c++)
         {
             unsigned int this_score = 0;
 
@@ -237,6 +237,9 @@ size_t convertImage(const sf::Image& image, uint8_t* destination)
             {
                 choosed_char_score = this_score;
                 choosed_char = c;
+
+                if (this_score == 8 * 16) //Max score
+                    break;
             }
         }
 
@@ -266,7 +269,18 @@ sf::Image resizeImage(const sf::Texture& texture)
 
         sf::RectangleShape rectangle_shape;
         rectangle_shape.setTexture(&texture);
-        rectangle_shape.setSize(sf::Vector2f(80 * 8, 24 * 16));
+
+        float expected_ratio = 80.f * 8.f / 24.f * 16.f;
+        float image_ratio = (float)texture.getSize().x / (float)texture.getSize().y;
+
+        if (image_ratio < expected_ratio)
+        {
+            rectangle_shape.setSize(sf::Vector2f(image_ratio * 24.f * 16.f, 24.f * 16.f));
+        }
+        else
+        {
+            rectangle_shape.setSize(sf::Vector2f(80.f * 8.f, 80.f * 8.f / image_ratio));
+        }
 
         render_texture.draw(rectangle_shape);
 
