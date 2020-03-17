@@ -6,7 +6,9 @@
 class FakeTerminal
 {
     public:
-        FakeTerminal(sf::Vector2u terminal_size);
+        using frame_callback_t = bool(*)(uint8_t*);
+
+        FakeTerminal(sf::Vector2u terminal_size, frame_callback_t callback);
         virtual ~FakeTerminal();
 
         bool init();
@@ -28,9 +30,12 @@ class FakeTerminal
 
         void prepareVertices();
 
+        void load_next_frame();
+
         std::array<sf::Vector2f, 4> getCharQuad(uint8_t character);
 
         virtual void update(float delta);
 
     private:
+        frame_callback_t next_frame_callback = nullptr;
 };
