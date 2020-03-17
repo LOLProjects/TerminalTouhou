@@ -98,7 +98,9 @@ void FakeTerminal::prepareVertices()
 
     for (unsigned int x = 0; x < size.x; x++)
     for (unsigned int y = 0; y < size.y; y++)
-        setChar(sf::Vector2u(x, y), def);
+    {
+        setChar(sf::Vector2u(x, y), test_string[x + y * size.x]);
+    }
 }
 
 void FakeTerminal::load_next_frame()

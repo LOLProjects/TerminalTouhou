@@ -5,10 +5,12 @@
 
 class FakeTerminal
 {
+
     public:
         using frame_callback_t = bool(*)(uint8_t*);
 
         FakeTerminal(sf::Vector2u terminal_size, frame_callback_t callback);
+		
         virtual ~FakeTerminal();
 
         bool init();
