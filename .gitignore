@@ -20,3 +20,5 @@ bld/
 
 # VS Code files
 .vscode/
+
+*.bin
