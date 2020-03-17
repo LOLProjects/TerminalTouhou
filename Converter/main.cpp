@@ -131,14 +131,14 @@ int main(int argc, char** argv)
         if (verbose)
             std::clog << "Converting..." << std::endl;
 
-        size_t data_size = convertImage(single_image_resized, frame_data.begin());
+        size_t data_size = convertImage(single_image_resized, &frame_data[0]);
 
         if (verbose)
             std::clog << "Saving result..." << std::endl;
 
         //Save the data
         std::ofstream file("result.bin", std::ios::binary);
-        file.write((const char*)frame_data.begin(), data_size);
+        file.write((const char*)&frame_data[0], data_size);
 
         if (verbose)
             std::clog << "Done!" << std::endl;
@@ -178,13 +178,13 @@ int main(int argc, char** argv)
             if (verbose)
                 std::clog << '=' << std::flush;
 
-            size_t data_size = convertImage(single_image_resized, frame_data.begin());
+            size_t data_size = convertImage(single_image_resized, &frame_data[0]);
 
             if (verbose)
                 std::clog << '=' << std::flush;
 
             //Save the data
-            file.write((const char*)frame_data.begin(), data_size);
+            file.write((const char*)&frame_data[0], data_size);
 
             if (verbose)
                 std::clog << ']' << std::endl;
@@ -247,9 +247,17 @@ size_t convertImage(const sf::Image& image, uint8_t* destination)
             //Take care of RLE compression on the spot
             if (data_size == 0 || destination[data_size - 1] == 0xFF || destination[data_size - 2] != choosed_char) //Need to create a new RLE block
             {
+<<<<<<< HEAD
                 destination[data_size] = choosed_char;
                 destination[data_size + 1] = 0;
                 data_size += 2;
+=======
+                choosed_char_score = this_score;
+                choosed_char = c;
+
+                if (this_score == 8 * 16) //Max score
+                    break;
+>>>>>>> c071c2324b63179e6c44e766569fb33987b113c5
             }
             else    //Increment the current RLE block
                 destination[data_size - 1]++;
