@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     path = argv[1];
     if (path == "-h" || path == "--help") return giveHelp();
 
-    if (!exists(path)) return fileNotFound(path);
+    //if (!exists(path)) return fileNotFound(path); We have to change that to support folders for videos
 
     while (argc-- != 2)
     {
@@ -98,40 +98,99 @@ int main(int argc, char** argv)
     if (verbose)
         std::cout << "Verbose mode is enabled." << std::endl;
 
-    if (!single_image)
-    {
-        std::cerr << "Only single image mode is supported right now. Use -s to enable it." << std::endl;
-        return 1;
-    }
-
-    //Load the image
-    sf::Texture test_texture;
-
-    if (!test_texture.loadFromFile(path))
-    {
-        std::cerr << "Couldn't open file" << std::endl;
-        return 1;
-    }
-
-    sf::Image test_image = resizeImage(test_texture);
 
     //Load the charset
     if (!chars.loadFromFile("chars.png"))
+    {
+        std::cerr << "Could not open charset image!" << std::endl;
         return 1;
+    }
+    assert(chars.getSize() == sf::Vector2u(304, 144)); //We don't have support for other charsets yet
 
-    //The data array : 2 * 1920 bytes is the biggest it could ever be
-    std::array<uint8_t, 2 * 24 * 80> frame_data;
-    size_t pointer = 0;
+    if (single_image)
+    {
+        //Load the image
+        if (verbose)
+            std::clog << "Loading image..." << std::endl;
 
-    size_t s = convertImage(test_image, frame_data.begin());
+        sf::Texture single_image;
+        if (!single_image.loadFromFile(path))
+        {
+            std::cerr << "Could not open image (single image mode)." << std::endl;
+            return 1;
+        }
 
-    std::cout << "Frame took " << s << " bytes." << std::endl;
+        if (verbose)
+            std::clog << "Resizing image..." << std::endl;
 
-    pointer += s;
+        sf::Image single_image_resized = resizeImage(single_image);
 
+        //The data array : 2 * 1920 bytes is the biggest it could ever be
+        std::array<uint8_t, 2 * 24 * 80> frame_data;
+
+        if (verbose)
+            std::clog << "Converting..." << std::endl;
+
+        size_t data_size = convertImage(single_image_resized, frame_data.begin());
+
+        if (verbose)
+            std::clog << "Saving result..." << std::endl;
+
+        //Save the data
+        std::ofstream file("result.bin", std::ios::binary);
+        file.write((const char*)frame_data.begin(), data_size);
+
+        if (verbose)
+            std::clog << "Done!" << std::endl;
+    }
+    else //Video mode!
     {
         std::ofstream file("result.bin", std::ios::binary);
-        file.write((const char*)frame_data.begin(), pointer);
+        //Check if file is valid
+
+        int i = 1;
+        while (true)
+        {
+            std::string filename = path + '\\' + std::to_string(i) + ".png";
+
+            if (verbose)
+                std::clog << "Working on image #" << i << " [" << std::flush;
+
+            //Load the image
+            if (verbose)
+                std::clog << 'l' << std::flush;
+
+            sf::Texture single_image;
+            if (!single_image.loadFromFile(filename))
+            {
+                std::cerr << "Could not open image, stopping." << std::endl;
+                break;
+            }
+
+            if (verbose)
+                std::clog << 'r' << std::flush;
+
+            sf::Image single_image_resized = resizeImage(single_image);
+
+            //The data array : 2 * 1920 bytes is the biggest it could ever be
+            std::array<uint8_t, 2 * 24 * 80> frame_data;
+
+            if (verbose)
+                std::clog << 'c' << std::flush;
+
+            size_t data_size = convertImage(single_image_resized, frame_data.begin());
+
+            if (verbose)
+                std::clog << 's' << std::flush;
+
+            //Save the data
+            file.write((const char*)frame_data.begin(), data_size);
+
+            if (verbose)
+                std::clog << ']' << std::endl;
+
+            i++;
+        }
     }
 
     return 0;
