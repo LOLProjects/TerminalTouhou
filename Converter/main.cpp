@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 
             //Load the image
             if (verbose)
-                std::clog << 'l' << std::flush;
+                std::clog << '=' << std::flush;
 
             sf::Texture single_image;
             if (!single_image.loadFromFile(filename))
@@ -168,7 +168,7 @@ int main(int argc, char** argv)
             }
 
             if (verbose)
-                std::clog << 'r' << std::flush;
+                std::clog << '=' << std::flush;
 
             sf::Image single_image_resized = resizeImage(single_image);
 
@@ -176,12 +176,12 @@ int main(int argc, char** argv)
             std::array<uint8_t, 2 * 24 * 80> frame_data;
 
             if (verbose)
-                std::clog << 'c' << std::flush;
+                std::clog << '=' << std::flush;
 
             size_t data_size = convertImage(single_image_resized, frame_data.begin());
 
             if (verbose)
-                std::clog << 's' << std::flush;
+                std::clog << '=' << std::flush;
 
             //Save the data
             file.write((const char*)frame_data.begin(), data_size);
@@ -209,46 +209,52 @@ size_t convertImage(const sf::Image& image, uint8_t* destination)
     //Compression is done on the spot
     //For each char of the terminal
     for (int y = 0; y < 24; y++)
-    for (int x = 0; x < 80; x++)
     {
-        uint8_t choosed_char = 0;
-        unsigned int choosed_char_score = 0;
-
-        //For each char in the charset
-        for (int c = 0; c < 256; c++)
+        for (int x = 0; x < 80; x++)
         {
-            unsigned int this_score = 0;
+            uint8_t choosed_char = 0;
+            unsigned int choosed_char_score = 0;
 
-            int ccx = 9 * (c % 32) + 8;
-            int ccy = 16 * (c / 32) + 8;
-
-            //For each pixel of the char in the charset
-            for (int cx = 0; cx < 8; cx++)
-            for (int cy = 0; cy < 16; cy++)
+            //For each char in the charset
+            for (int c = 0; c < 256; c++)
             {
-                //Make a score of how much that char fits the original image pixels
-                bool image_pixel = image.getPixel(x * 8 + cx, y * 16 + cy).r > 127;
-                bool char_pixel = chars.getPixel(ccx + cx, ccy + cy).r > 127;
+                unsigned int this_score = 0;
 
-                this_score += !(image_pixel ^ char_pixel);
+                int ccx = 9 * (c % 32) + 8;
+                int ccy = 16 * (c / 32) + 8;
+
+                //For each pixel of the char in the charset
+                for (int cx = 0; cx < 8; cx++)
+                for (int cy = 0; cy < 16; cy++)
+                {
+                    //Make a score of how much that char fits the original image pixels
+                    bool image_pixel = image.getPixel(x * 8 + cx, y * 16 + cy).r > 127;
+                    bool char_pixel = chars.getPixel(ccx + cx, ccy + cy).r > 127;
+
+                    this_score += !(image_pixel ^ char_pixel);
+                }
+
+                if (this_score > choosed_char_score)
+                {
+                    choosed_char_score = this_score;
+                    choosed_char = c;
+
+                    if (this_score == 8 * 16) //Max score
+                        break;
+                }
             }
 
-            if (this_score > choosed_char_score)
+            //Take care of RLE compression on the spot
+            if (data_size == 0 || destination[data_size - 1] == 0xFF || destination[data_size - 2] != choosed_char) //Need to create a new RLE block
             {
-                choosed_char_score = this_score;
-                choosed_char = c;
+                destination[data_size] = choosed_char;
+                destination[data_size + 1] = 0;
+                data_size += 2;
             }
+            else    //Increment the current RLE block
+                destination[data_size - 1]++;
         }
-
-        //Take care of RLE compression on the spot
-        if (data_size == 0 || destination[data_size - 1] == 0xFF || destination[data_size - 2] != choosed_char) //Need to create a new RLE block
-        {
-            destination[data_size] = choosed_char;
-            destination[data_size + 1] = 0;
-            data_size += 2;
-        }
-        else    //Increment the current RLE block
-            destination[data_size - 1]++;
+        std::cout << '-' << std::flush;
     }
 
     assert(data_size <= 3840);
