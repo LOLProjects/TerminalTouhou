@@ -131,14 +131,14 @@ int main(int argc, char** argv)
         if (verbose)
             std::clog << "Converting..." << std::endl;
 
-        size_t data_size = convertImage(single_image_resized, (uint8_t*)frame_data);
+        size_t data_size = convertImage(single_image_resized, &frame_data[0]);
 
         if (verbose)
             std::clog << "Saving result..." << std::endl;
 
         //Save the data
         std::ofstream file("result.bin", std::ios::binary);
-        file.write((const char*)frame_data, data_size);
+        file.write((const char*)&frame_data[0], data_size);
 
         if (verbose)
             std::clog << "Done!" << std::endl;
@@ -178,13 +178,13 @@ int main(int argc, char** argv)
             if (verbose)
                 std::clog << 'c' << std::flush;
 
-            size_t data_size = convertImage(single_image_resized, (uint8_t*)frame_data);
+            size_t data_size = convertImage(single_image_resized, &frame_data[0]);
 
             if (verbose)
                 std::clog << 's' << std::flush;
 
             //Save the data
-            file.write((const char*)(uint8_t*)frame_data, data_size);
+            file.write((const char*)&frame_data[0], data_size);
 
             if (verbose)
                 std::clog << ']' << std::endl;
