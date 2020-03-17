@@ -9,8 +9,10 @@ class FakeTerminal
     public:
         using frame_callback_t = bool(*)(uint8_t*);
 
+        static const uint8_t test_string[];
+
         FakeTerminal(sf::Vector2u terminal_size, frame_callback_t callback);
-		
+
         virtual ~FakeTerminal();
 
         bool init();
