@@ -247,17 +247,9 @@ size_t convertImage(const sf::Image& image, uint8_t* destination)
             //Take care of RLE compression on the spot
             if (data_size == 0 || destination[data_size - 1] == 0xFF || destination[data_size - 2] != choosed_char) //Need to create a new RLE block
             {
-<<<<<<< HEAD
                 destination[data_size] = choosed_char;
                 destination[data_size + 1] = 0;
                 data_size += 2;
-=======
-                choosed_char_score = this_score;
-                choosed_char = c;
-
-                if (this_score == 8 * 16) //Max score
-                    break;
->>>>>>> c071c2324b63179e6c44e766569fb33987b113c5
             }
             else    //Increment the current RLE block
                 destination[data_size - 1]++;
