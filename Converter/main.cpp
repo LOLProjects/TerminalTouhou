@@ -6,6 +6,8 @@
 #include <fstream>
 #include <array>
 
+#include <assert.h>
+
 int giveHelp()
 {
     std::cout <<
@@ -47,6 +49,25 @@ int fileNotFound(std::string& path)
         << "Use -h or --help to get usage." << std::endl;
     return 1;
 }
+
+/**
+* Converts one image to RLE compressed data for the terminal to read
+* Keep in mind when allocating a buffer that the data can be up to 80 * 24 * 2 bytes, 3840
+* @param image : the image to convert. It HAS to be 640 by 384 pixels
+* @param destination : where the data is going to be written
+* @return how many bytes have been written
+*/
+size_t convertImage(const sf::Image& image, uint8_t* destination);
+
+/**
+* Resizes one image to the right size : 640 by 384 pixels.
+* @param texture : the image to convert. The image to resize
+* @param destination : where the data is going to be written
+* @return a new image of the right size
+*/
+sf::Image resizeImage(const sf::Texture& texture);
+
+sf::Image chars;
 
 int main(int argc, char** argv)
 {
@@ -92,35 +113,39 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    //Redimention it
-    sf::RenderTexture render_texture;
-    render_texture.create(80 * 8, 24 * 16);
-
-    {
-        render_texture.clear();
-
-        sf::RectangleShape rectangle_shape;
-        rectangle_shape.setTexture(&test_texture);
-        rectangle_shape.setSize(sf::Vector2f(80 * 8, 24 * 16));
-
-        render_texture.draw(rectangle_shape);
-
-        render_texture.display();
-    }
-
-    sf::Texture result = render_texture.getTexture();
-
-    sf::Image test_image = result.copyToImage();
-
-    //test_image.saveToFile("test.png");
+    sf::Image test_image = resizeImage(test_texture);
 
     //Load the charset
-    sf::Image chars;
-    chars.loadFromFile("chars.png");
+    if (!chars.loadFromFile("chars.png"))
+        return 1;
 
     //The data array : 2 * 1920 bytes is the biggest it could ever be
     std::array<uint8_t, 2 * 24 * 80> frame_data;
     size_t pointer = 0;
+
+    size_t s = convertImage(test_image, frame_data.begin());
+
+    std::cout << "Frame took " << s << " bytes." << std::endl;
+
+    pointer += s;
+
+    {
+        std::ofstream file("result.bin", std::ios::binary);
+        file.write((const char*)frame_data.begin(), pointer);
+    }
+
+    return 0;
+}
+
+size_t convertImage(const sf::Image& image, uint8_t* destination)
+{
+    if (image.getSize() != sf::Vector2u(80 * 8, 24 * 16))
+    {
+        std::cerr << "Could not convert frame! It is not of the expected size (640 * 384)." << std::endl;
+        return 0;
+    }
+
+    size_t data_size = 0;
 
     //Compression is done on the spot
     //For each char of the terminal
@@ -143,7 +168,7 @@ int main(int argc, char** argv)
             for (int cy = 0; cy < 16; cy++)
             {
                 //Make a score of how much that char fits the original image pixels
-                bool image_pixel = test_image.getPixel(x * 8 + cx, y * 16 + cy).r > 127;
+                bool image_pixel = image.getPixel(x * 8 + cx, y * 16 + cy).r > 127;
                 bool char_pixel = chars.getPixel(ccx + cx, ccy + cy).r > 127;
 
                 this_score += !(image_pixel ^ char_pixel);
@@ -156,20 +181,40 @@ int main(int argc, char** argv)
             }
         }
 
-        if (pointer == 0 || frame_data.at(pointer - 1) == 255 || frame_data.at(pointer - 2) != choosed_char) //Need to create a new RLE block
+        //Take care of RLE compression on the spot
+        if (data_size == 0 || destination[data_size - 1] == 0xFF || destination[data_size - 2] != choosed_char) //Need to create a new RLE block
         {
-            frame_data.at(pointer) = choosed_char;
-            frame_data.at(pointer + 1) = 0;
-            pointer += 2;
+            destination[data_size] = choosed_char;
+            destination[data_size + 1] = 0;
+            data_size += 2;
         }
-        else
-            frame_data.at(pointer - 1)++;
+        else    //Increment the current RLE block
+            destination[data_size - 1]++;
     }
+
+    assert(data_size <= 3840);
+
+    return data_size;
+}
+
+sf::Image resizeImage(const sf::Texture& texture)
+{
+    sf::RenderTexture render_texture;
+    render_texture.create(80 * 8, 24 * 16);
 
     {
-        std::ofstream file("result.bin", std::ios::binary);
-        file.write((const char*)frame_data.begin(), pointer);
+        render_texture.clear();
+
+        sf::RectangleShape rectangle_shape;
+        rectangle_shape.setTexture(&texture);
+        rectangle_shape.setSize(sf::Vector2f(80 * 8, 24 * 16));
+
+        render_texture.draw(rectangle_shape);
+
+        render_texture.display();
     }
 
-    return 0;
+    sf::Texture result = render_texture.getTexture();
+
+    return result.copyToImage();
 }
