@@ -17,3 +17,6 @@ bld/
 
 # Dynamic link libraries
 *.dll
+
+# VS Code files
+.vscode/
